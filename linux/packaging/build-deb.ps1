@@ -26,6 +26,9 @@ Copy-Item "$BuildDir\*" "$PkgRoot\opt\tepi\" -Recurse
 
 $launcherContent = @"
 #!/bin/sh
+export DOTNET_GCHeapHardLimit=20000000
+export DOTNET_gcServer=0
+export DOTNET_EnableWriteXorExecute=0
 export LD_LIBRARY_PATH="/opt/tepi:`$LD_LIBRARY_PATH"
 cd /opt/tepi
 exec /opt/tepi/Tepi.Linux "`$@"

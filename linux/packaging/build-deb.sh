@@ -11,7 +11,7 @@ else
 fi
 
 PKG_ROOT="$ROOT_DIR/linux/packaging/tepi_arm64"
-OUT_DEB="$ROOT_DIR/tepi_2.6.2_arm64.deb"
+OUT_DEB="$ROOT_DIR/tepi_2.6.3_arm64.deb"
 
 echo "Building Debian package for arm64..."
 echo "Using build output from: $BUILD_DIR"
@@ -35,16 +35,19 @@ cp "$ROOT_DIR/linux/packaging/DEBIAN/control" "$PKG_ROOT/DEBIAN/control"
 # 2. Copy entire publish output to /opt/tepi
 echo "Copying published files to /opt/tepi..."
 cp -r "$BUILD_DIR"/* "$PKG_ROOT/opt/tepi/"
-chmod +x "$PKG_ROOT/opt/tepi/Tepi.Linux"
+chmod 0755 "$PKG_ROOT/opt/tepi/Tepi.Linux"
 
-# 3. Create wrapper script in /usr/bin/tepi
+# 3. Create wrapper script in /usr/bin/tepi with PRoot CoreCLR memory guards
 cat << 'EOF' > "$PKG_ROOT/usr/bin/tepi"
 #!/bin/sh
+export DOTNET_GCHeapHardLimit=20000000
+export DOTNET_gcServer=0
+export DOTNET_EnableWriteXorExecute=0
 export LD_LIBRARY_PATH="/opt/tepi:${LD_LIBRARY_PATH}"
 cd /opt/tepi
 exec /opt/tepi/Tepi.Linux "$@"
 EOF
-chmod +x "$PKG_ROOT/usr/bin/tepi"
+chmod 0755 "$PKG_ROOT/usr/bin/tepi"
 
 # 4. Copy desktop entry
 cp "$ROOT_DIR/linux/packaging/tepi.desktop" "$PKG_ROOT/usr/share/applications/tepi.desktop"
@@ -52,7 +55,10 @@ cp "$ROOT_DIR/linux/packaging/tepi.desktop" "$PKG_ROOT/usr/share/applications/te
 # 5. Icon placeholder / assets
 touch "$PKG_ROOT/usr/share/icons/hicolor/256x256/apps/tepi.png"
 
-# 6. Build the .deb
+# 6. Set correct permissions for Debian package directories
+chmod -R 0755 "$PKG_ROOT/DEBIAN"
+
+# 7. Build the .deb
 dpkg-deb --build --root-owner-group "$PKG_ROOT" "$OUT_DEB"
 
 echo "Debian package successfully created: $OUT_DEB"

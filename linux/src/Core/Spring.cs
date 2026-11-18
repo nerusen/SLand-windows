@@ -4,6 +4,8 @@ namespace Tepi.Linux.Core
 {
     public class Spring
     {
+        const float MaxStep = 0.002f;
+
         public float Value { get; set; }
         public float Target { get; set; }
         public float Velocity { get; set; }
@@ -11,7 +13,7 @@ namespace Tepi.Linux.Core
         public float Damping { get; set; }
         public float Precision { get; set; }
 
-        public Spring(float value, float stiffness = 280f, float damping = 26f, float precision = 0.04f)
+        public Spring(float value, float stiffness = 300f, float damping = 26f, float precision = 0.04f)
         {
             Value = Target = value;
             Stiffness = stiffness;
@@ -20,31 +22,31 @@ namespace Tepi.Linux.Core
             Velocity = 0;
         }
 
-        public bool Settled => Math.Abs(Target - Value) < Precision && Math.Abs(Velocity) < Precision * 2f;
+        public bool Settled => Math.Abs(Target - Value) < Precision && Math.Abs(Velocity) < 6 * Precision;
 
+        // Sub-stepped analytical physics (identical to Base.cs in Windows src)
         public bool Step(float dt)
         {
             if (Settled)
             {
-                Value = Target;
-                Velocity = 0;
+                Snap(Target);
                 return false;
             }
 
-            // Clamping dt to avoid numerical instability
-            dt = Math.Min(dt, 0.05f);
+            int n = (int)Math.Ceiling(dt / MaxStep);
+            if (n < 1) n = 1;
+            float h = dt / n;
 
-            float force = -Stiffness * (Value - Target);
-            float dampingForce = -Damping * Velocity;
-            float acceleration = force + dampingForce;
-
-            Velocity += acceleration * dt;
-            Value += Velocity * dt;
+            while (n-- > 0)
+            {
+                float accel = Stiffness * (Target - Value) - Damping * Velocity;
+                Velocity += accel * h;
+                Value += Velocity * h;
+            }
 
             if (Settled)
             {
-                Value = Target;
-                Velocity = 0;
+                Snap(Target);
                 return false;
             }
 
@@ -56,6 +58,13 @@ namespace Tepi.Linux.Core
             Value = Target = v;
             Velocity = 0;
         }
+
+        // Factory presets for island states
+        public static Spring ForWidth(float initial) => new Spring(initial, 300f, 26f, 0.04f);
+        public static Spring ForHeight(float initial) => new Spring(initial, 240f, 23f, 0.04f);
+        public static Spring ForRadius(float initial) => new Spring(initial, 300f, 26f, 0.04f);
+        public static Spring ForGaze(float initial) => new Spring(initial, 120f, 20f, 0.04f);
+        public static Spring ForEyelid(float initial) => new Spring(initial, 60f, 15f, 0.01f);
     }
 
     public static class Ease

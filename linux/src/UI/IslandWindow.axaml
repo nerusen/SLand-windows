@@ -1,8 +1,9 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctrl="using:Tepi.Linux.UI.Controls"
         x:Class="Tepi.Linux.UI.IslandWindow"
         Title="Tepi Dynamic Island"
-        Width="152" Height="44"
+        Width="104" Height="46"
         SystemDecorations="None"
         Background="Transparent"
         TransparencyLevelHint="Transparent"
@@ -11,125 +12,278 @@
         WindowStartupLocation="Manual">
 
     <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="2,4,2,4">
-        <!-- Island Capsule -->
+        <!-- Island Capsule Hull (Simulated Dark Acrylic with Double Specular Highlight) -->
         <Border Name="IslandBorder"
-                Background="#E6101014"
-                BorderBrush="#2AFFFFFF"
-                BorderThickness="1"
-                CornerRadius="18"
-                BoxShadow="0 4 20 0 #A0000000"
+                Width="96" Height="34"
+                CornerRadius="17"
                 ClipToBounds="True"
                 Cursor="Hand"
                 PointerEntered="OnPointerEntered"
                 PointerExited="OnPointerExited"
+                PointerMoved="OnPointerMoved"
                 PointerPressed="OnPointerPressed">
-            
-            <Border.Transitions>
-                <Transitions>
-                    <DoubleTransition Property="Width" Duration="0:0:0.25" Easing="CubicEaseOut" />
-                    <DoubleTransition Property="Height" Duration="0:0:0.25" Easing="CubicEaseOut" />
-                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.25" Easing="CubicEaseOut" />
-                </Transitions>
-            </Border.Transitions>
 
-            <Grid Margin="12,6,12,6">
-                <!-- 1. IDLE / COMPACT VIEW -->
-                <Grid Name="IdleView" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-                    <!-- Left: Mini Mascot / Indicator -->
-                    <TextBlock Name="MascotText" Grid.Column="0" Text="●" Foreground="#3B82F6" 
-                               FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    
-                    <!-- Center: Clock / Status -->
-                    <TextBlock Name="ClockText" Grid.Column="1" Text="12:00" Foreground="#F3F4F6" 
-                               FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                    
-                    <!-- Right: Playing wave / info -->
-                    <TextBlock Name="StatusGlyph" Grid.Column="2" Text="♫" Foreground="#9CA3AF" 
-                               FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <Grid>
+                <!-- ======================================================== -->
+                <!-- 1. COMPACT IDLE VIEW (96x34 or 112x34)                   -->
+                <!-- ======================================================== -->
+                <Grid Name="CompactIdleView" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center" Margin="10,0,10,0">
+                    <!-- Left indicator dot / emblem -->
+                    <Border Grid.Column="0" Width="6" Height="6" CornerRadius="3" Background="#3B82F6" 
+                            VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                    <!-- Center: Vector Mascot Eyes or Clock -->
+                    <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ctrl:EyeMascotControl Name="EyeMascot" />
+                        <TextBlock Name="ClockText" IsVisible="False" Text="12:00" Foreground="#F5F5F7" 
+                                   FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Right unread badge or media dot -->
+                    <Border Name="UnreadBadge" Grid.Column="2" IsVisible="False" Width="17" Height="17" 
+                            CornerRadius="8.5" Background="#F5F5F7" Margin="6,0,0,0">
+                        <TextBlock Name="UnreadCountText" Text="1" Foreground="#000000" FontSize="10" 
+                                   FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Name="IdleMediaIndicator" Grid.Column="2" Text="♫" Foreground="#9CA3AF" 
+                               FontSize="11" VerticalAlignment="Center" Margin="6,0,0,0" IsVisible="False" />
                 </Grid>
 
-                <!-- 2. EXPANDED VIEW CONTAINER -->
-                <StackPanel Name="ExpandedView" IsVisible="False" Spacing="10" VerticalAlignment="Top">
-                    <!-- Header with Title & Close/Minimize -->
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,4">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <TextBlock Name="ViewCategoryText" Text="Tepi Island" Foreground="#9CA3AF" FontSize="11" FontWeight="Medium" />
-                            <TextBlock Text="•" Foreground="#4B5563" FontSize="10" VerticalAlignment="Center" />
-                            <TextBlock Name="SubInfoText" Text="Linux ARM64" Foreground="#60A5FA" FontSize="11" />
-                        </StackPanel>
-                        
-                        <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="4,0,4,0" 
-                                Foreground="#6B7280" Click="OnMinimizeClick" Cursor="Hand">
-                            <TextBlock Text="▲" FontSize="10" />
+                <!-- ======================================================== -->
+                <!-- 2. COMPACT MEDIA VIEW (236-400x38)                       -->
+                <!-- ======================================================== -->
+                <Grid Name="CompactMediaView" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center" 
+                      Margin="8,0,10,0" IsVisible="False">
+                    <!-- Left: Album Art Thumbnail -->
+                    <Border Grid.Column="0" Width="24" Height="24" CornerRadius="6" Background="#22222E" 
+                            ClipToBounds="True" VerticalAlignment="Center">
+                        <TextBlock Text="♫" FontSize="12" Foreground="#9CA3AF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Center: Track Title & Artist -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" 
+                                Margin="10,0,10,0" HorizontalAlignment="Center">
+                        <TextBlock Name="MediaTitleCompact" Text="Judul Lagu" Foreground="#F5F5F7" 
+                                   FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="160"/>
+                        <TextBlock Text="  ·  " Foreground="#6B7280" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Name="MediaArtistCompact" Text="Artis" Foreground="#9CA3AF" 
+                                   FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="100"/>
+                    </StackPanel>
+
+                    <!-- Right: Waveform Equalizer / Hover Play-Pause -->
+                    <Grid Grid.Column="2" VerticalAlignment="Center" Width="26" Height="24" Cursor="Hand"
+                          PointerEntered="OnMediaControlHover" PointerExited="OnMediaControlUnhover">
+                        <ctrl:EqualizerWaveControl Name="MediaEqualizer" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Button Name="MediaPlayPauseQuickBtn" IsVisible="False" Background="Transparent" 
+                                BorderThickness="0" Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Click="OnPlayPauseClick">
+                            <TextBlock Name="MediaPlayPauseQuickIcon" Text="▶" Foreground="#F5F5F7" FontSize="12"/>
                         </Button>
                     </Grid>
+                </Grid>
 
-                    <!-- A. Media Section -->
-                    <Border Name="MediaSection" Background="#1AFFFFFF" CornerRadius="12" Padding="10,8">
-                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
-                            <!-- Album art placeholder / Icon -->
-                            <Border Grid.RowSpan="2" Width="36" Height="36" Background="#33333E" CornerRadius="8" Margin="0,0,10,0">
-                                <TextBlock Text="♫" FontSize="18" Foreground="#E5E7EB" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <!-- Bottom Hairline Progress for Media (2px height) -->
+                <Border Name="MediaHairlineProgress" Height="2" VerticalAlignment="Bottom" Margin="19,0,19,0" 
+                        Background="#1AFFFFFF" CornerRadius="1" IsVisible="False">
+                    <Border Name="MediaHairlineBar" Width="30" HorizontalAlignment="Left" Background="#4DFFFFFF" CornerRadius="1"/>
+                </Border>
+
+                <!-- ======================================================== -->
+                <!-- 3. NOTIFICATION / TRACK TOAST (404x66)                   -->
+                <!-- ======================================================== -->
+                <Grid Name="ToastView" ColumnDefinitions="Auto,*" VerticalAlignment="Center" 
+                      Margin="14,0,14,0" IsVisible="False">
+                    <Border Width="40" Height="40" CornerRadius="20" Background="#253B82F6" 
+                            VerticalAlignment="Center" Margin="0,0,12,0">
+                        <TextBlock Name="ToastIconText" Text="💬" FontSize="18" Foreground="#60A5FA" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Name="ToastTitle" Text="Notifikasi Baru" Foreground="#F5F5F7" 
+                                       FontSize="13.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Name="ToastSource" Grid.Column="1" Text="WhatsApp" Foreground="#9CA3AF" 
+                                       FontSize="11" Margin="6,0,0,0"/>
+                        </Grid>
+                        <TextBlock Name="ToastBody" Text="Pesan masuk dari kontak..." Foreground="#9CA3AF" 
+                                   FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ======================================================== -->
+                <!-- 4. AGENT APPROVAL CARD (452x220)                         -->
+                <!-- ======================================================== -->
+                <Grid Name="AgentApproveView" RowDefinitions="Auto,*,Auto" Margin="16,12,16,12" IsVisible="False">
+                    <!-- Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="⚡" FontSize="13" Foreground="#3B82F6"/>
+                            <TextBlock Name="AgentProjectName" Text="Proyek / Agent" Foreground="#F5F5F7" FontSize="13" FontWeight="Bold"/>
+                            <Border Background="#1A3B82F6" CornerRadius="6" Padding="6,2">
+                                <TextBlock Name="AgentKindBadge" Text="Antigravity" Foreground="#60A5FA" FontSize="10.5"/>
                             </Border>
-
-                            <!-- Title & Artist -->
-                            <TextBlock Name="TrackTitle" Grid.Column="1" Grid.Row="0" Text="Tidak ada musik" 
-                                       Foreground="#F9FAFB" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Name="TrackArtist" Grid.Column="1" Grid.Row="1" Text="Buka pemutar musik di Linux" 
-                                       Foreground="#9CA3AF" FontSize="11" TextTrimming="CharacterEllipsis"/>
-
-                            <!-- Controls -->
-                            <StackPanel Grid.Column="2" Grid.RowSpan="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                <Button Background="Transparent" Foreground="#D1D5DB" Padding="6,4" Click="OnPrevTrackClick">
-                                    <TextBlock Text="⏮" FontSize="12"/>
-                                </Button>
-                                <Button Name="PlayPauseBtn" Background="#3B82F6" Foreground="White" CornerRadius="14" Padding="8,4" Click="OnPlayPauseClick">
-                                    <TextBlock Name="PlayPauseIcon" Text="▶" FontSize="11"/>
-                                </Button>
-                                <Button Background="Transparent" Foreground="#D1D5DB" Padding="6,4" Click="OnNextTrackClick">
-                                    <TextBlock Text="⏭" FontSize="12"/>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- B. Agent Section (Visible when active) -->
-                    <Border Name="AgentSection" Background="#153B82F6" BorderBrush="#303B82F6" BorderThickness="1" CornerRadius="12" Padding="10,8" IsVisible="False">
-                        <Grid RowDefinitions="Auto,Auto,Auto">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="⚡ Coding Agent" Foreground="#60A5FA" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Name="AgentNameText" Text="Antigravity" Foreground="#93C5FD" FontSize="11"/>
-                            </StackPanel>
-                            <TextBlock Name="AgentPromptText" Grid.Row="1" Text="Menjalankan tugas..." 
-                                       Foreground="#E5E7EB" FontSize="12" Margin="0,4,0,8" TextWrapping="Wrap"/>
-                            <StackPanel Name="AgentActions" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                <Button Content="Tolak" Background="#374151" Foreground="#F87171" FontSize="11" Padding="10,4" CornerRadius="8" Click="OnAgentRejectClick"/>
-                                <Button Content="Izinkan" Background="#2563EB" Foreground="White" FontSize="11" Padding="10,4" CornerRadius="8" Click="OnAgentApproveClick"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- C. Sholat & Productivity Row -->
-                    <Grid ColumnDefinitions="*,*" Margin="2,0,2,0">
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <TextBlock Text="🕌" FontSize="12"/>
-                            <TextBlock Name="PrayerText" Text="Subuh 04:30" Foreground="#D1D5DB" FontSize="11" VerticalAlignment="Center"/>
                         </StackPanel>
+                        <TextBlock Grid.Column="2" Text="Menunggu Izin" Foreground="#F07878" FontSize="11" FontWeight="SemiBold"/>
+                    </Grid>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                            <Button Background="Transparent" Padding="4,2" Foreground="#9CA3AF" Click="OnTimerToggleClick">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="⏱" FontSize="11"/>
-                                    <TextBlock Name="TimerBtnText" Text="Timer" FontSize="11"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Background="Transparent" Padding="4,2" Foreground="#EF4444" Click="OnExitClick">
-                                <TextBlock Text="Keluar" FontSize="11"/>
-                            </Button>
+                    <!-- Terminal Code Container -->
+                    <Border Grid.Row="1" Background="#16161E" BorderBrush="#222230" BorderThickness="1" 
+                            CornerRadius="10" Padding="10" Margin="0,0,0,10">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock Name="AgentCommandText" Text="bash script command..." 
+                                       FontFamily="Consolas,DejaVu Sans Mono,monospace" FontSize="11.5" 
+                                       Foreground="#E5E7EB" TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Action Buttons -->
+                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <TextBlock Text="Persetujuan perintah eksekusi" Foreground="#6B7280" FontSize="10.5" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8">
+                            <Button Content="Tolak" Width="92" Height="30" CornerRadius="8" 
+                                    Background="#22222C" Foreground="#F07878" FontSize="11.5" FontWeight="SemiBold"
+                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    Click="OnAgentRejectClick"/>
+                            <Button Content="Izinkan" Width="112" Height="30" CornerRadius="8" 
+                                    Background="#3B82F6" Foreground="#FFFFFF" FontSize="11.5" FontWeight="SemiBold"
+                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                    Click="OnAgentApproveClick"/>
                         </StackPanel>
                     </Grid>
-                </StackPanel>
+                </Grid>
+
+                <!-- ======================================================== -->
+                <!-- 5. EXPANDED PANEL VIEW (460x320) & 10 TAB NAVIGATION     -->
+                <!-- ======================================================== -->
+                <Grid Name="ExpandedPanelView" RowDefinitions="Auto,*,Auto" Margin="12,10,12,8" IsVisible="False">
+                    <!-- Top Tab Bar: 10 Tabs with Vector Icons & Active Label within 460px -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                            <StackPanel Name="TabBar" Orientation="Horizontal" Spacing="3">
+                                <!-- 1. Home / Ringkasan -->
+                                <Button Name="TabBtn0" Classes="IslandTab active" Tag="0" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="⊞" FontSize="12"/>
+                                        <TextBlock Text="Ringkasan" FontSize="11" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 2. Musik -->
+                                <Button Name="TabBtn1" Classes="IslandTab" Tag="1" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="♫" FontSize="12"/>
+                                        <TextBlock Text="Musik" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 3. Agen -->
+                                <Button Name="TabBtn2" Classes="IslandTab" Tag="2" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="⚡" FontSize="12"/>
+                                        <TextBlock Text="Agen" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 4. Kuliah -->
+                                <Button Name="TabBtn3" Classes="IslandTab" Tag="3" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="🎓" FontSize="12"/>
+                                        <TextBlock Text="Kuliah" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 5. Pesan -->
+                                <Button Name="TabBtn4" Classes="IslandTab" Tag="4" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="💬" FontSize="12"/>
+                                        <TextBlock Text="Pesan" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 6. Rak & Clip -->
+                                <Button Name="TabBtn5" Classes="IslandTab" Tag="5" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="📁" FontSize="12"/>
+                                        <TextBlock Text="Rak" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 7. Kontrol -->
+                                <Button Name="TabBtn6" Classes="IslandTab" Tag="6" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="🎛" FontSize="12"/>
+                                        <TextBlock Text="Kontrol" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 8. Sholat & Remind -->
+                                <Button Name="TabBtn7" Classes="IslandTab" Tag="7" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="🕌" FontSize="12"/>
+                                        <TextBlock Text="Sholat" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 9. HP Link -->
+                                <Button Name="TabBtn8" Classes="IslandTab" Tag="8" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="📱" FontSize="12"/>
+                                        <TextBlock Text="HP" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- 10. Pengaturan -->
+                                <Button Name="TabBtn9" Classes="IslandTab" Tag="9" Click="OnTabClicked">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="⚙" FontSize="12"/>
+                                        <TextBlock Text="Setelan" FontSize="11" FontWeight="SemiBold" IsVisible="False"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- Center Body Container (Hosts modular TabViews) -->
+                    <Border Grid.Row="1" Background="#14141C" BorderBrush="#1C1C26" BorderThickness="1" 
+                            CornerRadius="14" Padding="8" Margin="0,0,0,6">
+                        <ContentControl Name="TabContentHost"/>
+                    </Border>
+
+                    <!-- Bottom Bar: Status Info & Close Button -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="4,0,4,0">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="●" Foreground="#10B981" FontSize="9" VerticalAlignment="Center"/>
+                            <TextBlock Name="BottomStatusText" Text="Tepi ARM64 PRoot Aktif" Foreground="#6B7280" FontSize="10.5"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="6,2" 
+                                Foreground="#6B7280" Click="OnMinimizeClick" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="Tutup" FontSize="10.5"/>
+                                <TextBlock Text="▲" FontSize="9" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
             </Grid>
         </Border>
     </Grid>
+
+    <Window.Styles>
+        <Style Selector="Button.IslandTab">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="7,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.IslandTab:pointerover">
+            <Setter Property="Background" Value="#1CFFFFFF"/>
+            <Setter Property="Foreground" Value="#F5F5F7"/>
+        </Style>
+        <Style Selector="Button.IslandTab.active">
+            <Setter Property="Background" Value="#17FFFFFF"/>
+            <Setter Property="Foreground" Value="#F5F5F7"/>
+        </Style>
+    </Window.Styles>
 </Window>

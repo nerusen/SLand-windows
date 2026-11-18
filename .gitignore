@@ -1,1 +1,6 @@
 *.pdb
+bin/
+obj/
+*.deb
+linux/packaging/tepi_arm64/
+linux/publish-arm64/

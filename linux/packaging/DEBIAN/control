@@ -1,0 +1,12 @@
+Package: tepi
+Version: 2.6.2
+Section: utils
+Priority: optional
+Architecture: arm64
+Maintainer: Tepi Contributors <info@tepi.local>
+Depends: libc6, libx11-6, libice6, libsm6, libfontconfig1, libfreetype6, playerctl
+Recommends: picom
+Description: Dynamic Island desktop companion for Linux Debian ARM64 (PRoot / Tiny Container)
+ Native dynamic island for Linux desktop, supporting media playback,
+ system notifications, coding agent approvals, and timers with
+ low memory and CPU footprint.

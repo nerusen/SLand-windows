@@ -7,21 +7,51 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build:
+  build-windows:
+    name: Build Windows (.exe)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build Tepi.exe from source
         shell: cmd
         run: build.cmd
-      - name: SHA-256
+      - name: SHA-256 Checksum
         shell: pwsh
         run: (Get-FileHash Tepi.exe -Algorithm SHA256).Hash
       - uses: actions/upload-artifact@v4
         with:
-          name: Tepi
+          name: Tepi-Windows
           path: Tepi.exe
+          if-no-files-found: error
+
+  build-linux-arm64:
+    name: Build Linux Debian ARM64 (.deb)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish Linux ARM64 Self-Contained
+        run: |
+          dotnet publish linux/Tepi.Linux.csproj -c Release -r linux-arm64 --self-contained true -p:PublishTrimmed=false -o linux/publish-arm64
+
+      - name: Build Debian Package
+        run: |
+          chmod +x linux/packaging/build-deb.sh
+          ./linux/packaging/build-deb.sh
+
+      - name: SHA-256 Checksum
+        run: sha256sum tepi_*.deb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tepi-Linux-Debian-arm64
+          path: tepi_*.deb
           if-no-files-found: error
